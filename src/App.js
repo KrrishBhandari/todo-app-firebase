@@ -1,15 +1,25 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import localforage from "localforage";
 
 function App() {
   const [task, setTask] = useState({ name: "", completed: "" });
   const [tasks, setTasks] = useState([]);
 
+  useEffect(() => {
+    localforage.getItem("tasks", (err, tasks) => {
+      if (tasks) {
+        setTasks(tasks);
+      }
+    });
+  });
+
   const getTasks = () => {
     return tasks.map((items, index) => {
       return (
         <li
+          key={index}
           className={task.completed ? "green" : "red"}
           onDoubleClick={() => deleteTask(index)}
           onClick={() => updateTask(index)}
@@ -20,26 +30,36 @@ function App() {
     });
   };
 
+  // This funcution store data in local storage
+
+  const storeTasks = (tasks) => {
+    setTasks(tasks);
+
+    localforage.setItem("tasks", tasks, (err) => {
+      console.log("task added");
+    });
+  };
+
   const updateTask = (i) => {
     const newTask = [...tasks];
     newTask.splice(i, 1, {
       name: newTask[i].name,
       completed: !newTask[i].completed,
     });
-    setTasks(newTask);
+    storeTasks(newTask);
   };
 
   const deleteTask = (i) => {
     const newTask = [...tasks];
     newTask.splice(i, 1);
-    setTasks(newTask);
+    storeTasks(newTask);
   };
 
   const addTask = (t) => {
     if (t) {
       const newTask = [...tasks];
       newTask.push({ name: t, completed: false });
-      setTasks(newTask);
+      storeTasks(newTask);
       setTask({ name: "", completed: "" });
     } else {
       alert("Enter valid value");
